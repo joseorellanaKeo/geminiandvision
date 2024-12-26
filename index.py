@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv  # Importa load_dotenv
+from dotenv import load_dotenv
 from google.cloud import vision
 import requests
 import json
@@ -10,10 +10,16 @@ import fitz
 # Carga las variables de entorno desde el archivo .env
 load_dotenv()
 
-# Configuración (IMPORTANTE: Configura tu clave de API como variable de entorno)
+# Configura la autenticación con el archivo JSON de Google Cloud
+SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+if not SERVICE_ACCOUNT_JSON:
+    raise ValueError("Error: La variable de entorno GOOGLE_APPLICATION_CREDENTIALS no está definida. Configúrala en el archivo .env.")
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = SERVICE_ACCOUNT_JSON  # Esto asegura que Vision API lea el archivo JSON
+
+# Configuración de la API Gemini
 API_KEY = os.environ.get("GEMINI_API_KEY")
 if not API_KEY:
-    raise ValueError("Error: La variable de entorno GEMINI_API_KEY no está definida. Consulta las instrucciones para configurarla.")
+    raise ValueError("Error: La variable de entorno GEMINI_API_KEY no está definida. Configúrala en el archivo .env.")
 
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
@@ -43,7 +49,7 @@ def procesar_pdf_con_vision_y_gemini(pdf_path, prompt_gemini="Extrae los ativos 
         for page_num in range(doc.page_count):
             try:
                 page = doc[page_num]
-                pix = page.get_pixmap(matrix=fitz.Matrix(3, 3)) # Mejora la resolución para OCR
+                pix = page.get_pixmap(matrix=fitz.Matrix(3, 3))  # Mejora la resolución para OCR
                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                 image_bytes = io.BytesIO()
                 img.save(image_bytes, format="PNG")
@@ -68,7 +74,7 @@ def procesar_pdf_con_vision_y_gemini(pdf_path, prompt_gemini="Extrae los ativos 
             except Exception as e:
                 print(f"Error al procesar la página {page_num + 1}: {e}")
 
-        doc.close() # Cierra el documento PDF
+        doc.close()  # Cierra el documento PDF
 
         texto_completo = "\n\n".join(textos_por_pagina)
 
