@@ -1,2 +1,4 @@
-.env
+# vscode settings
 auth_key.json
+.env
+
